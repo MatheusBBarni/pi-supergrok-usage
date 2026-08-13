@@ -1,3 +1,4 @@
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it } from "vitest";
 import factory from "../extensions/index.js";
 
@@ -36,7 +37,7 @@ describe("supergrok-usage extension factory", () => {
     expect(typeof factory).toBe("function");
 
     const { pi, calls } = createFakePi();
-    factory(pi);
+    factory(pi as ExtensionAPI);
 
     expect(calls.on).toEqual([]);
     expect(calls.registerTool).toEqual([]);

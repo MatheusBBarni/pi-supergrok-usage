@@ -8,7 +8,21 @@ Pi already shows session tokens, cost, and context fill. It does **not** show Su
 
 ## Status
 
-**Planning.** No extension code yet. See [Issues](../../issues) for the build plan.
+**Scaffold.** Installable Pi package with a silent extension stub. Quota probe, footer, and `/usage-limit` are not shipped. See [Issues](../../issues) for the build plan.
+
+## Install
+
+```bash
+# from git (current)
+pi install git:github.com/MatheusBBarni/pi-supergrok-usage
+
+# from npm (when published)
+pi install npm:pi-supergrok-usage
+
+# local checkout
+pi install .
+pi -e .
+```
 
 ## Approach
 

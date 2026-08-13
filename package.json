@@ -1,0 +1,55 @@
+{
+  "name": "pi-supergrok-usage",
+  "version": "0.0.0",
+  "description": "Pi coding-agent extension that surfaces xAI / SuperGrok usage limits",
+  "author": "Matheus B. Barni",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatheusBBarni/pi-supergrok-usage.git"
+  },
+  "homepage": "https://github.com/MatheusBBarni/pi-supergrok-usage#readme",
+  "bugs": {
+    "url": "https://github.com/MatheusBBarni/pi-supergrok-usage/issues"
+  },
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "pi-coding-agent",
+    "xai",
+    "grok",
+    "supergrok"
+  ],
+  "files": [
+    "extensions",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions/index.ts"
+    ]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-coding-agent": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.84.1",
+    "@types/node": "^24.12.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
