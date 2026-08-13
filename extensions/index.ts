@@ -7,6 +7,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { buildDump, type HeaderDump } from "./build-dump.js";
 import { formatRpmStatus } from "./format-rpm-status.js";
+import { formatUsageNotify } from "./format-usage-notify.js";
 import { isXaiModel } from "./is-xai-model.js";
 import { parseRequestWindow } from "./parse-request-window.js";
 import {
@@ -89,6 +90,17 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
         return;
       }
       setFooterStatus(ctx, formatRpmStatus(cache));
+    });
+
+    pi.registerCommand("xai-usage", {
+      description: "Show the last cached xAI request rate window",
+      handler: async (_args, ctx) => {
+        try {
+          ctx.ui.notify(formatUsageNotify(cache), "info");
+        } catch {
+          // Print/JSON modes may have no notify surface.
+        }
+      },
     });
   };
 }

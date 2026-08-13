@@ -49,7 +49,9 @@ describe("supergrok-usage extension factory", () => {
       "model_select",
     ]);
     expect(calls.registerTool).toEqual([]);
-    expect(calls.registerCommand).toEqual([]);
+    expect(calls.registerCommand.map((args) => (args as unknown[])[0])).toEqual(
+      ["xai-usage"],
+    );
     expect(calls.registerShortcut).toEqual([]);
     expect(calls.registerFlag).toEqual([]);
 

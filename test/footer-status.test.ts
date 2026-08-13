@@ -8,6 +8,7 @@ function createFakePi() {
     on(event: string, handler: Function) {
       handlers.set(event, handler);
     },
+    registerCommand() {},
   };
   return { pi, handlers };
 }
@@ -28,7 +29,7 @@ describe("footer status from request window", () => {
   it("sets xAI remaining/limit RPM after a complete window and ignores incomplete or non-xAI", async () => {
     const factory = createExtension({ writeDump: async () => {} });
     const { pi, handlers } = createFakePi();
-    factory(pi as ExtensionAPI);
+    factory(pi as unknown as ExtensionAPI);
 
     const after = handlers.get("after_provider_response");
     expect(typeof after).toBe("function");

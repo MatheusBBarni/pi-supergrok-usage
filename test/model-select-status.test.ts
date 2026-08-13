@@ -8,6 +8,7 @@ function createFakePi() {
     on(event: string, handler: Function) {
       handlers.set(event, handler);
     },
+    registerCommand() {},
   };
   return { pi, handlers };
 }
@@ -28,7 +29,7 @@ describe("model_select footer status", () => {
   it("clears off xAI, restores cached RPM, and stays clear without a cache", async () => {
     const factory = createExtension({ writeDump: async () => {} });
     const { pi, handlers } = createFakePi();
-    factory(pi as ExtensionAPI);
+    factory(pi as unknown as ExtensionAPI);
 
     const after = handlers.get("after_provider_response");
     const onSelect = handlers.get("model_select");
@@ -85,7 +86,7 @@ describe("model_select footer status", () => {
 
     const empty = createFakePi();
     const emptyUi = createUi();
-    factory(empty.pi as ExtensionAPI);
+    factory(empty.pi as unknown as ExtensionAPI);
     await empty.handlers.get("model_select")?.(
       {
         type: "model_select",
