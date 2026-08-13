@@ -1,4 +1,5 @@
-const DENYLIST = /authorization|cookie|set-cookie|api[-_]?key|token|secret|bearer|password|auth/i;
+const DENYLIST =
+  /\b(?:authorization|cookie|set-cookie|api[-_]?key|token|secret|bearer|password|auth)\b/i;
 
 export function redactHeaders(
   headers: Record<string, string>,
