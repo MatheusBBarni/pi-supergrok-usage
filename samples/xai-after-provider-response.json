@@ -1,0 +1,16 @@
+{
+  "ts": "2026-08-13T16:26:56.347Z",
+  "status": 200,
+  "headers": {
+    "content-type": "text/event-stream",
+    "x-data-retention": "general",
+    "x-ratelimit-limit-requests": "8300",
+    "x-ratelimit-limit-tokens": "53000000",
+    "x-ratelimit-remaining-requests": "8300",
+    "x-ratelimit-remaining-tokens": "53000000",
+    "x-zero-data-retention": "false"
+  },
+  "provider": "xai",
+  "modelId": "grok-4.6",
+  "note": "Redacted sample from one grok-4.6 call via after_provider_response. Live dumps stay in .pi/ (gitignored). Infra/request ids omitted from this sample; rate-limit fields kept in full."
+}
