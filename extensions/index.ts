@@ -9,6 +9,10 @@ import { buildDump, type HeaderDump } from "./build-dump.js";
 import { formatRpmStatus } from "./format-rpm-status.js";
 import { isXaiModel } from "./is-xai-model.js";
 import { parseRequestWindow } from "./parse-request-window.js";
+import {
+  buildObservation,
+  type UsageObservation,
+} from "./usage-observation.js";
 
 const DUMP_FILE = "supergrok-usage-headers.jsonl";
 
@@ -43,7 +47,7 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
   const writeDump = options?.writeDump ?? defaultWriteDump;
 
   return function (pi: ExtensionAPI): void {
-    let cache: ReturnType<typeof parseRequestWindow>;
+    let cache: UsageObservation | undefined;
 
     pi.on("after_provider_response", async (event, ctx) => {
       if (!isXaiModel(ctx.model)) {
@@ -68,8 +72,12 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
         return;
       }
 
-      cache = window;
-      setFooterStatus(ctx, formatRpmStatus(window));
+      cache = buildObservation({
+        window,
+        provider: ctx.model.provider,
+        modelId: ctx.model.id,
+      });
+      setFooterStatus(ctx, formatRpmStatus(cache));
     });
 
     pi.on("model_select", (event, ctx) => {
