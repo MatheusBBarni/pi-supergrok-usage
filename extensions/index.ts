@@ -6,7 +6,9 @@ import {
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { buildDump, type HeaderDump } from "./build-dump.js";
+import { formatRpmStatus } from "./format-rpm-status.js";
 import { isXaiModel } from "./is-xai-model.js";
+import { parseRequestWindow } from "./parse-request-window.js";
 
 const DUMP_FILE = "supergrok-usage-headers.jsonl";
 
@@ -33,9 +35,10 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
         return;
       }
 
+      const headers = event.headers ?? {};
       const record = buildDump({
         status: event.status,
-        headers: event.headers ?? {},
+        headers,
         model: { provider: ctx.model.provider, id: ctx.model.id },
       });
 
@@ -43,6 +46,17 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
         await writeDump(record, ctx);
       } catch {
         // Probe is best-effort; never break the provider turn.
+      }
+
+      const window = parseRequestWindow(headers);
+      if (!window) {
+        return;
+      }
+
+      try {
+        ctx.ui.setStatus("supergrok-usage", formatRpmStatus(window));
+      } catch {
+        // Print/JSON modes may have no status surface.
       }
     });
   };
