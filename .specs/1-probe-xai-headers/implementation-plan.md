@@ -15,6 +15,7 @@
 ## Behaviors to test (in order)
 
 1. **Tracer:** `redactHeaders` keeps quota headers, replaces denylisted names (case-insensitive) with `"<redacted>"`, does not mutate the input.
+1b. `redactHeaders` keeps `x-ratelimit-*-tokens` (word-boundary denylist; `token` ≠ `tokens`).
 2. `isXaiModel` is true only when `model.provider === "xai"` (false for missing model, other providers).
 3. `buildDump` returns `{ ts, status, headers, provider, modelId }` with redacted headers and ISO-8601 `ts`.
 4. Factory registers **only** `after_provider_response`. Handler writes one JSONL line for xAI; writes nothing when model is missing or not xAI; write errors are swallowed.

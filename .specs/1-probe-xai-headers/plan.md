@@ -14,7 +14,8 @@ Prove whether SuperGrok / xAI exposes usable quota data on normal chat requests 
   - `headers`: copy of `event.headers` after redact
   - `provider`: `ctx.model.provider` (`"xai"`)
   - `modelId`: `ctx.model.id`
-- Redact: if header **name** matches `/authorization|cookie|set-cookie|api[-_]?key|token|secret|bearer|password|auth/i`, keep the key, set value to `"<redacted>"`.
+- Redact: if header **name** matches `/\b(?:authorization|cookie|set-cookie|api[-_]?key|token|secret|bearer|password|auth)\b/i`, keep the key, set value to `"<redacted>"`.
+- Do **not** redact `x-ratelimit-*` fields (including `*-tokens`). `token` is a whole word; `tokens` is not.
 - `mkdir` recursive, append one JSON line. On write error: swallow (no throw, no notify).
 - Modules (import-only; manifest stays `./extensions/index.ts`):
   - `extensions/redact-headers.ts`
