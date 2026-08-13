@@ -46,6 +46,7 @@ describe("supergrok-usage extension factory", () => {
 
     expect(calls.on.map((entry) => entry.event)).toEqual([
       "after_provider_response",
+      "model_select",
     ]);
     expect(calls.registerTool).toEqual([]);
     expect(calls.registerCommand).toEqual([]);

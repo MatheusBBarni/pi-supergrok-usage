@@ -8,7 +8,7 @@ Pi already shows session tokens, cost, and context fill. It does **not** show Su
 
 ## Status
 
-**Probe shipped.** xAI `after_provider_response` headers are appended to `.pi/supergrok-usage-headers.jsonl` (gitignored). Redacted sample: [`samples/xai-after-provider-response.json`](samples/xai-after-provider-response.json). Footer and `/usage-limit` are not shipped. See [Issues](../../issues).
+**Probe + footer shipped.** xAI `after_provider_response` headers are appended to `.pi/supergrok-usage-headers.jsonl` (gitignored). After an xAI call the footer shows `xAI {remaining}/{limit} RPM` and clears when the active model is not xAI. Redacted sample: [`samples/xai-after-provider-response.json`](samples/xai-after-provider-response.json). `/usage-limit` is not shipped. See [Issues](../../issues).
 
 ## Install
 

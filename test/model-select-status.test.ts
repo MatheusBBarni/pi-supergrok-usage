@@ -96,7 +96,7 @@ describe("model_select footer status", () => {
     );
     expect(emptyUi.statuses).toEqual([]);
 
-    await expect(
+    expect(() =>
       onSelect?.(
         {
           type: "model_select",
@@ -105,6 +105,6 @@ describe("model_select footer status", () => {
         },
         { cwd: "/tmp/model-select-test" },
       ),
-    ).resolves.toBeUndefined();
+    ).not.toThrow();
   });
 });

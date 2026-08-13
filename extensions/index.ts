@@ -26,10 +26,25 @@ function defaultWriteDump(
   appendFileSync(join(dir, DUMP_FILE), `${JSON.stringify(record)}\n`, "utf8");
 }
 
+const STATUS_KEY = "supergrok-usage";
+
+function setFooterStatus(
+  ctx: Pick<ExtensionContext, "ui"> | { ui?: { setStatus?: (key: string, value: string | undefined) => void } },
+  value: string | undefined,
+): void {
+  try {
+    ctx.ui?.setStatus?.(STATUS_KEY, value);
+  } catch {
+    // Print/JSON modes may have no status surface.
+  }
+}
+
 export function createExtension(options?: { writeDump?: WriteDump }) {
   const writeDump = options?.writeDump ?? defaultWriteDump;
 
   return function (pi: ExtensionAPI): void {
+    let cache: ReturnType<typeof parseRequestWindow>;
+
     pi.on("after_provider_response", async (event, ctx) => {
       if (!isXaiModel(ctx.model)) {
         return;
@@ -53,11 +68,19 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
         return;
       }
 
-      try {
-        ctx.ui.setStatus("supergrok-usage", formatRpmStatus(window));
-      } catch {
-        // Print/JSON modes may have no status surface.
+      cache = window;
+      setFooterStatus(ctx, formatRpmStatus(window));
+    });
+
+    pi.on("model_select", (event, ctx) => {
+      if (!isXaiModel(event.model)) {
+        setFooterStatus(ctx, undefined);
+        return;
       }
+      if (!cache) {
+        return;
+      }
+      setFooterStatus(ctx, formatRpmStatus(cache));
     });
   };
 }
