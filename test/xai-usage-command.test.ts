@@ -21,7 +21,12 @@ function createFakePi() {
 
 describe("/xai-usage command", () => {
   it("notifies empty copy, then cached window, and ignores missing notify", async () => {
-    const factory = createExtension({ writeDump: async () => {} });
+    const factory = createExtension({
+      writeDump: async () => {},
+      fetchBilling: async () => {
+        throw new Error("no fetch in test");
+      },
+    });
     const { pi, handlers, commands } = createFakePi();
     factory(pi as ExtensionAPI);
 
@@ -39,7 +44,8 @@ describe("/xai-usage command", () => {
     });
     expect(notes).toEqual([
       {
-        message: "No xAI rate window yet. Send a Grok message first.",
+        message:
+          "No SuperGrok usage yet. Run /login xai (subscription) or send a Grok message.",
         level: "info",
       },
     ]);
@@ -72,7 +78,7 @@ describe("/xai-usage command", () => {
     expect(notes[0]?.level).toBe("info");
     expect(notes[0]?.message).toContain("xAI 7/10 RPM · headers ·");
     expect(notes[0]?.message).toContain(
-      "Request rate window, not SuperGrok weekly. Session tokens/cost stay in the built-in footer.",
+      "Request rate window. SuperGrok weekly needs /login xai (subscription).",
     );
 
     await expect(

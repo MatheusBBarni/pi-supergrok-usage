@@ -1,0 +1,19 @@
+{
+  "config": {
+    "currentPeriod": {
+      "type": "USAGE_PERIOD_TYPE_WEEKLY",
+      "start": "2026-08-17T17:33:48.278812+00:00",
+      "end": "2026-08-24T17:33:48.278812+00:00"
+    },
+    "creditUsagePercent": 1.0,
+    "onDemandCap": { "val": 0 },
+    "onDemandUsed": { "val": 0 },
+    "productUsage": [{ "product": "GrokBuild", "usagePercent": 1.0 }],
+    "isUnifiedBillingUser": true,
+    "prepaidBalance": { "val": 0 },
+    "topUpMethod": "TOP_UP_METHOD_SAVED_PAYMENT_METHOD",
+    "billingPeriodStart": "2026-08-17T17:33:48.278812+00:00",
+    "billingPeriodEnd": "2026-08-24T17:33:48.278812+00:00"
+  },
+  "note": "Redacted sample from GET https://cli-chat-proxy.grok.com/v1/billing?format=credits with a SuperGrok OAuth token. No credentials."
+}

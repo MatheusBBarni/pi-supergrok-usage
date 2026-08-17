@@ -39,12 +39,16 @@ describe("supergrok-usage extension factory", () => {
       writeDump: async (record) => {
         writes.push(record);
       },
+      fetchBilling: async () => {
+        throw new Error("no fetch in test");
+      },
     });
 
     const { pi, calls } = createFakePi();
     factory(pi as ExtensionAPI);
 
     expect(calls.on.map((entry) => entry.event)).toEqual([
+      "session_start",
       "after_provider_response",
       "model_select",
     ]);
@@ -55,8 +59,12 @@ describe("supergrok-usage extension factory", () => {
     expect(calls.registerShortcut).toEqual([]);
     expect(calls.registerFlag).toEqual([]);
 
-    const handler = calls.on[0]?.handler;
-    expect(typeof handler).toBe("function");
+    const handler = calls.on.find((entry) => entry.event === "after_provider_response")
+      ?.handler;
+    expect(handler).toEqual(expect.any(Function));
+    if (!handler) {
+      throw new Error("after_provider_response handler missing");
+    }
 
     await handler(
       {
@@ -96,11 +104,21 @@ describe("supergrok-usage extension factory", () => {
       writeDump: async () => {
         throw new Error("disk full");
       },
+      fetchBilling: async () => {
+        throw new Error("no fetch in test");
+      },
     });
     const thrown = createFakePi();
     throwingFactory(thrown.pi as ExtensionAPI);
+    const throwingHandler = thrown.calls.on.find(
+      (entry) => entry.event === "after_provider_response",
+    )?.handler;
+    expect(throwingHandler).toEqual(expect.any(Function));
+    if (!throwingHandler) {
+      throw new Error("after_provider_response handler missing");
+    }
     await expect(
-      thrown.calls.on[0]?.handler(
+      throwingHandler(
         { type: "after_provider_response", status: 429, headers: {} },
         { cwd: "/tmp/probe-test", model: { provider: "xai", id: "grok-4" } },
       ),

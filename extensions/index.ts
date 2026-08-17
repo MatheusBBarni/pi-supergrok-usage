@@ -6,7 +6,8 @@ import {
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { buildDump, type HeaderDump } from "./build-dump.js";
-import { formatRpmStatus } from "./format-rpm-status.js";
+import { fetchBillingSnapshot } from "./fetch-billing.js";
+import { formatFooterStatus } from "./format-footer-status.js";
 import { formatUsageNotify } from "./format-usage-notify.js";
 import { isXaiModel } from "./is-xai-model.js";
 import { parseRequestWindow } from "./parse-request-window.js";
@@ -14,13 +15,17 @@ import {
   buildObservation,
   type UsageObservation,
 } from "./usage-observation.js";
+import type { SuperGrokSnapshot } from "./to-snapshot.js";
 
 const DUMP_FILE = "supergrok-usage-headers.jsonl";
+const BILLING_TTL_MS = 5 * 60 * 1000;
 
 export type WriteDump = (
   record: HeaderDump,
   ctx: Pick<ExtensionContext, "cwd">,
 ) => Promise<void> | void;
+
+export type FetchBilling = () => Promise<SuperGrokSnapshot>;
 
 function defaultWriteDump(
   record: HeaderDump,
@@ -34,7 +39,9 @@ function defaultWriteDump(
 const STATUS_KEY = "supergrok-usage";
 
 function setFooterStatus(
-  ctx: Pick<ExtensionContext, "ui"> | { ui?: { setStatus?: (key: string, value: string | undefined) => void } },
+  ctx:
+    | Pick<ExtensionContext, "ui">
+    | { ui?: { setStatus?: (key: string, value: string | undefined) => void } },
   value: string | undefined,
 ): void {
   try {
@@ -44,11 +51,61 @@ function setFooterStatus(
   }
 }
 
-export function createExtension(options?: { writeDump?: WriteDump }) {
+export function createExtension(options?: {
+  writeDump?: WriteDump;
+  fetchBilling?: FetchBilling;
+}) {
   const writeDump = options?.writeDump ?? defaultWriteDump;
+  const fetchBilling = options?.fetchBilling ?? fetchBillingSnapshot;
 
   return function (pi: ExtensionAPI): void {
-    let cache: UsageObservation | undefined;
+    let rpm: UsageObservation | undefined;
+    let billing: SuperGrokSnapshot | undefined;
+    let billingAt = 0;
+    let inflight: Promise<SuperGrokSnapshot | undefined> | undefined;
+
+    function footerValue(): string | undefined {
+      return formatFooterStatus({ billing, rpm });
+    }
+
+    function paint(
+      ctx: Parameters<typeof setFooterStatus>[0],
+      model?: { provider?: string; id?: string },
+    ) {
+      if (!isXaiModel(model)) {
+        if (model) {
+          setFooterStatus(ctx, undefined);
+        }
+        return;
+      }
+      setFooterStatus(ctx, footerValue());
+    }
+
+    async function refreshBilling(force: boolean): Promise<SuperGrokSnapshot | undefined> {
+      if (!force && billing && Date.now() - billingAt < BILLING_TTL_MS) {
+        return billing;
+      }
+      if (inflight) {
+        return inflight;
+      }
+      inflight = (async () => {
+        try {
+          const snapshot = await fetchBilling();
+          billing = snapshot;
+          billingAt = Date.now();
+          return snapshot;
+        } catch {
+          return billing;
+        } finally {
+          inflight = undefined;
+        }
+      })();
+      return inflight;
+    }
+
+    pi.on("session_start", (_event, ctx) => {
+      void refreshBilling(false).then(() => paint(ctx, ctx.model));
+    });
 
     pi.on("after_provider_response", async (event, ctx) => {
       if (!isXaiModel(ctx.model)) {
@@ -69,16 +126,22 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
       }
 
       const window = parseRequestWindow(headers);
-      if (!window) {
-        return;
+      if (window) {
+        rpm = buildObservation({
+          window,
+          provider: ctx.model.provider,
+          modelId: ctx.model.id,
+        });
       }
 
-      cache = buildObservation({
-        window,
-        provider: ctx.model.provider,
-        modelId: ctx.model.id,
+      if (window) {
+        paint(ctx, ctx.model);
+      }
+      void refreshBilling(false).then(() => {
+        if (window || billing) {
+          paint(ctx, ctx.model);
+        }
       });
-      setFooterStatus(ctx, formatRpmStatus(cache));
     });
 
     pi.on("model_select", (event, ctx) => {
@@ -86,17 +149,22 @@ export function createExtension(options?: { writeDump?: WriteDump }) {
         setFooterStatus(ctx, undefined);
         return;
       }
-      if (!cache) {
+      if (!billing && !rpm) {
         return;
       }
-      setFooterStatus(ctx, formatRpmStatus(cache));
+      paint(ctx, event.model);
     });
 
     pi.registerCommand("xai-usage", {
-      description: "Show the last cached xAI request rate window",
+      description: "Show SuperGrok weekly usage and the last xAI request window",
       handler: async (_args, ctx) => {
         try {
-          ctx.ui.notify(formatUsageNotify(cache), "info");
+          await refreshBilling(true);
+        } catch {
+          // Notify uses whatever is cached.
+        }
+        try {
+          ctx.ui.notify(formatUsageNotify(rpm, billing), "info");
         } catch {
           // Print/JSON modes may have no notify surface.
         }
