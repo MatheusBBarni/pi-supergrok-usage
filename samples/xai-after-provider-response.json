@@ -12,5 +12,5 @@
   },
   "provider": "xai",
   "modelId": "grok-4.6",
-  "note": "Redacted sample from one grok-4.6 call via after_provider_response. Live dumps stay in .pi/ (gitignored). Infra/request ids omitted from this sample; rate-limit fields kept in full."
+  "note": "Redacted sample from one grok-4.6 call via after_provider_response. Infra/request ids omitted from this sample; rate-limit fields kept in full."
 }

@@ -1,11 +1,7 @@
-import { appendFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
 import {
-  CONFIG_DIR_NAME,
   type ExtensionAPI,
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { buildDump, type HeaderDump } from "./build-dump.js";
 import { fetchBillingSnapshot } from "./fetch-billing.js";
 import { formatFooterStatus } from "./format-footer-status.js";
 import { formatUsageNotify } from "./format-usage-notify.js";
@@ -17,24 +13,9 @@ import {
 } from "./usage-observation.js";
 import type { SuperGrokSnapshot } from "./to-snapshot.js";
 
-const DUMP_FILE = "supergrok-usage-headers.jsonl";
 const BILLING_TTL_MS = 5 * 60 * 1000;
 
-export type WriteDump = (
-  record: HeaderDump,
-  ctx: Pick<ExtensionContext, "cwd">,
-) => Promise<void> | void;
-
 export type FetchBilling = () => Promise<SuperGrokSnapshot>;
-
-function defaultWriteDump(
-  record: HeaderDump,
-  ctx: Pick<ExtensionContext, "cwd">,
-): void {
-  const dir = join(ctx.cwd, CONFIG_DIR_NAME);
-  mkdirSync(dir, { recursive: true });
-  appendFileSync(join(dir, DUMP_FILE), `${JSON.stringify(record)}\n`, "utf8");
-}
 
 const STATUS_KEY = "supergrok-usage";
 
@@ -52,10 +33,8 @@ function setFooterStatus(
 }
 
 export function createExtension(options?: {
-  writeDump?: WriteDump;
   fetchBilling?: FetchBilling;
 }) {
-  const writeDump = options?.writeDump ?? defaultWriteDump;
   const fetchBilling = options?.fetchBilling ?? fetchBillingSnapshot;
 
   return function (pi: ExtensionAPI): void {
@@ -113,18 +92,6 @@ export function createExtension(options?: {
       }
 
       const headers = event.headers ?? {};
-      const record = buildDump({
-        status: event.status,
-        headers,
-        model: { provider: ctx.model.provider, id: ctx.model.id },
-      });
-
-      try {
-        await writeDump(record, ctx);
-      } catch {
-        // Probe is best-effort; never break the provider turn.
-      }
-
       const window = parseRequestWindow(headers);
       if (window) {
         rpm = buildObservation({
@@ -132,9 +99,6 @@ export function createExtension(options?: {
           provider: ctx.model.provider,
           modelId: ctx.model.id,
         });
-      }
-
-      if (window) {
         paint(ctx, ctx.model);
       }
       void refreshBilling(false).then(() => {

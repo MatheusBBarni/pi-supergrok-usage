@@ -29,7 +29,6 @@ describe("SuperGrok billing in the extension", () => {
   it("paints SG percent on session start and includes it in /xai-usage", async () => {
     let fetched: Promise<SuperGrokSnapshot> | undefined;
     const factory = createExtension({
-      writeDump: async () => {},
       fetchBilling: () => {
         fetched = Promise.resolve(snapshot);
         return fetched;

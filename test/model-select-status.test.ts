@@ -28,7 +28,6 @@ function createUi() {
 describe("model_select footer status", () => {
   it("clears off xAI, restores cached RPM, and stays clear without a cache", async () => {
     const factory = createExtension({
-      writeDump: async () => {},
       fetchBilling: async () => {
         throw new Error("no fetch in test");
       },

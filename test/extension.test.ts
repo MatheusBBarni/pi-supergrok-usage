@@ -33,12 +33,8 @@ function createFakePi() {
 }
 
 describe("supergrok-usage extension factory", () => {
-  it("registers only after_provider_response and writes a dump for xAI", async () => {
-    const writes: unknown[] = [];
+  it("registers session, response, and model hooks plus /xai-usage", async () => {
     const factory = createExtension({
-      writeDump: async (record) => {
-        writes.push(record);
-      },
       fetchBilling: async () => {
         throw new Error("no fetch in test");
       },
@@ -66,61 +62,30 @@ describe("supergrok-usage extension factory", () => {
       throw new Error("after_provider_response handler missing");
     }
 
-    await handler(
-      {
-        type: "after_provider_response",
-        status: 200,
-        headers: {
-          "x-ratelimit-remaining": "7",
-          authorization: "Bearer secret",
-        },
-      },
-      { cwd: "/tmp/probe-test", model: { provider: "xai", id: "grok-4" } },
-    );
-
-    expect(writes).toHaveLength(1);
-    expect(writes[0]).toMatchObject({
-      status: 200,
-      headers: {
-        "x-ratelimit-remaining": "7",
-        authorization: "<redacted>",
-      },
-      provider: "xai",
-      modelId: "grok-4",
-    });
-    expect(typeof (writes[0] as { ts: string }).ts).toBe("string");
-
-    await handler(
-      { type: "after_provider_response", status: 200, headers: {} },
-      { cwd: "/tmp/probe-test", model: { provider: "anthropic", id: "claude" } },
-    );
-    await handler(
-      { type: "after_provider_response", status: 200, headers: {} },
-      { cwd: "/tmp/probe-test" },
-    );
-    expect(writes).toHaveLength(1);
-
-    const throwingFactory = createExtension({
-      writeDump: async () => {
-        throw new Error("disk full");
-      },
-      fetchBilling: async () => {
-        throw new Error("no fetch in test");
-      },
-    });
-    const thrown = createFakePi();
-    throwingFactory(thrown.pi as ExtensionAPI);
-    const throwingHandler = thrown.calls.on.find(
-      (entry) => entry.event === "after_provider_response",
-    )?.handler;
-    expect(throwingHandler).toEqual(expect.any(Function));
-    if (!throwingHandler) {
-      throw new Error("after_provider_response handler missing");
-    }
     await expect(
-      throwingHandler(
-        { type: "after_provider_response", status: 429, headers: {} },
+      handler(
+        {
+          type: "after_provider_response",
+          status: 200,
+          headers: {
+            "x-ratelimit-remaining-requests": "7",
+            "x-ratelimit-limit-requests": "10",
+          },
+        },
         { cwd: "/tmp/probe-test", model: { provider: "xai", id: "grok-4" } },
+      ),
+    ).resolves.toBeUndefined();
+
+    await expect(
+      handler(
+        { type: "after_provider_response", status: 200, headers: {} },
+        { cwd: "/tmp/probe-test", model: { provider: "anthropic", id: "claude" } },
+      ),
+    ).resolves.toBeUndefined();
+    await expect(
+      handler(
+        { type: "after_provider_response", status: 200, headers: {} },
+        { cwd: "/tmp/probe-test" },
       ),
     ).resolves.toBeUndefined();
   });

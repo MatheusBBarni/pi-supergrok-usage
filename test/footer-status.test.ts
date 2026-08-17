@@ -28,7 +28,6 @@ function createUi() {
 describe("footer status from request window", () => {
   it("sets xAI remaining/limit RPM after a complete window and ignores incomplete or non-xAI", async () => {
     const factory = createExtension({
-      writeDump: async () => {},
       fetchBilling: async () => {
         throw new Error("no fetch in test");
       },

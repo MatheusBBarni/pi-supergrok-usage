@@ -22,7 +22,6 @@ function createFakePi() {
 describe("/xai-usage command", () => {
   it("notifies empty copy, then cached window, and ignores missing notify", async () => {
     const factory = createExtension({
-      writeDump: async () => {},
       fetchBilling: async () => {
         throw new Error("no fetch in test");
       },

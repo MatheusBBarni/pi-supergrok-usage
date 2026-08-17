@@ -8,11 +8,11 @@ Pi already shows session tokens, cost, and context fill. It does **not** show Su
 
 ## Status
 
-**Shipped** (`0.1.0`): SuperGrok weekly %, footer status, `/xai-usage`, and header probe dump.
+**Shipped** (`0.1.1`): SuperGrok weekly %, footer status, and `/xai-usage`.
 
 On session start (and after an xAI call) the extension `GET`s `https://cli-chat-proxy.grok.com/v1/billing?format=credits` with the SuperGrok OAuth token from `/login xai` or `~/.grok/auth.json`. The footer shows `SG {percent}% · {reset}` and appends `{remaining}/{limit} RPM` when a request window is cached. It clears when the active model is not xAI. `/xai-usage` refreshes billing and shows plan, percent, period, reset, prepaid balance, and the last RPM window.
 
-xAI `after_provider_response` headers are appended to `.pi/supergrok-usage-headers.jsonl` (gitignored). Redacted samples: [`samples/grok-billing.json`](samples/grok-billing.json), [`samples/xai-after-provider-response.json`](samples/xai-after-provider-response.json).
+Redacted samples: [`samples/grok-billing.json`](samples/grok-billing.json), [`samples/xai-after-provider-response.json`](samples/xai-after-provider-response.json).
 
 ## Install
 
@@ -47,14 +47,12 @@ pi -e .
 
 ## Safety
 
-- The access token is read only to send `Authorization: Bearer` and is never written to dumps, footer text, or notify text.
-- Auth-like response header names (`authorization`, `cookie`, `api-key`, `token`, …) are redacted to `<redacted>` in `.pi/supergrok-usage-headers.jsonl`.
-- The live dump lives under `.pi/` and is gitignored. Do not commit it.
+- The access token is read only to send `Authorization: Bearer` and is never written to footer text or notify text.
 - No credentials are stored in this repo.
 
 ## Approach
 
-1. **Probe** — log xAI `after_provider_response` headers after one Grok call
+1. **Probe** — inspect xAI `after_provider_response` headers after one Grok call
 2. **Decide** — SuperGrok weekly % from Grok billing; RPM from headers
 3. **Ship** — footer status, `/xai-usage`, cache last known values
 
